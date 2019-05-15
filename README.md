@@ -2,8 +2,10 @@
 # Rsyslog configuring with TLS (send log file)
 
 # Rsyslog_client.conf
-
 This file hold a basic configuration of rsyslog that send a file that contain different log, you need to change the IP and Port to the one you will need before implementation. 
+
+# Rsyslog_server.conf
+Simple Rsyslog server configuration.
 
 Today we will share a small tutorial where we will talk about all the steps that we need to configure Rsyslog and to create certificates:
 
@@ -106,7 +108,13 @@ The only file that I will use for configuration is /etc/rsyslog.conf, in some do
 #sudo vi /etc/rsyslog.conf
 In the following line I will describe in comment what each line of code mean:
 
-#In this part we will load tcp and we will mention the AuthMode that we will use ( we will send our traffic on TCP) module(load="imtcp" StreamDriver.AuthMode="x509/xxx" StreamDriver.Mode="1") # make gtls driver the default $DefaultNetstreamDriver gtls $DefaultNetstreamDriverCAFile /home/server/rsyslogTLS/ca.pem $DefaultNetstreamDriverCertFile /home/server/rsyslogTLS/server-cert.pem $DefaultNetstreamDriverKeyFile/home/rsys/rsyslogTLS/prsyslog-key.pem # Choose the port that we will listen on $InputTCPServerRun 6514  # Only allow the domain that we choose (optional)
+#In this part we will load tcp and we will mention the AuthMode that we will use ( we will send our traffic on TCP) module(load="imtcp" StreamDriver.AuthMode="x509/xxx" StreamDriver.Mode="1") 
+#make gtls driver the default $DefaultNetstreamDriver gtls 
+$DefaultNetstreamDriverCAFile /home/server/rsyslogTLS/ca.pem 
+$DefaultNetstreamDriverCertFile /home/server/rsyslogTLS/server-cert.pem $DefaultNetstreamDriverKeyFile/home/rsys/rsyslogTLS/prsyslog-key.pem 
+#Choose the port that we will listen on 
+$InputTCPServerRun 6514  
+#Only allow the domain that we choose (optional)
 $InputTCPServerStreamDriverPermittedPeer *.example.com
 
    + As we will accept traffic on port 6514 we need to activate it on our Iptable:
@@ -122,7 +130,21 @@ In this part we will send to our server the file “traffic.txt” created:
 #sudo vi /etc/rsyslog.conf
 The file is open you just type “i” to insert, save and quit with “esp + :wq”:
 
-#Load imfile module that will help us to send a file over rsyslog module(load=”imfile”) # Set gtls driver, authentication mode, stream driver mode to enable only tls and add certificates module(load=”imtcp” StreamDriver.AuthMode=”x509/yyy” StreamDriver.Mode=”1”) $DefaultNetstreamDriverCAFile /home/client/rsyslogTLS/ca.pem $DefaultNetstreamDriverCertFile /home/client/rsyslogTLS/client-cert.pem $DefaultNetstreamDriverKeyFile /home/client/rsyslogTLS/client-key.pem #read from the traffic log file and assign the tag "ssl" for its messages input(type="imfile "File="/home/client/rsyslog/traffic/txt" deleteStateOnFileDelete="on" reopenOnTruncate="on "Tag="ssl") #send ssl traffic to server on port 6514 if($syslogtag=="ssl") then{ action(name="sslLog" type="omfwd" protocol="tcp" target="IP@server" port="6514" template="ForwardToRsyslogServerFormatTemplate" StreamDriver="gtls" StreamDriverMode="1" StreamDriverAuthMode="x509/yyy")} #We can permit only to send traffic to a DNS name if we have (optional) $ActionSendStreamDriverPermittedPeer NAME.EXAMPLE.ORG #limit the message size (optional) $MaxMessageSize 10k # If you want to send every think typed in the client machine, If you use hostnames instead of IP configure DNS on /etc/hosts (optional) *.*@@ NAME.EXAMPLE.ORG:6514
+#Load imfile module that will help us to send a file over rsyslog 
+module(load=”imfile”) 
+#Set gtls driver, authentication mode, stream driver mode to enable only tls and add certificates 
+module(load=”imtcp” StreamDriver.AuthMode=”x509/yyy” StreamDriver.Mode=”1”) 
+$DefaultNetstreamDriverCAFile /home/client/rsyslogTLS/ca.pem 
+$DefaultNetstreamDriverCertFile /home/client/rsyslogTLS/client-cert.pem 
+$DefaultNetstreamDriverKeyFile /home/client/rsyslogTLS/client-key.pem 
+#read from the traffic log file and assign the tag "ssl" for its messages 
+input(type="imfile "File="/home/client/rsyslog/traffic/txt" deleteStateOnFileDelete="on" reopenOnTruncate="on "Tag="ssl") #send ssl traffic to server on port 6514 
+if($syslogtag=="ssl") then{ action(name="sslLog" type="omfwd" protocol="tcp" target="IP@server" port="6514" template="ForwardToRsyslogServerFormatTemplate" StreamDriver="gtls" StreamDriverMode="1" StreamDriverAuthMode="x509/yyy")} #We can permit only to send traffic to a DNS name if we have (optional) 
+$ActionSendStreamDriverPermittedPeer NAME.EXAMPLE.ORG 
+#limit the message size (optional) 
+$MaxMessageSize 10k 
+#If you want to send every think typed in the client machine, If you use hostnames instead of IP configure DNS on /etc/hosts (optional) 
+*.*@@ NAME.EXAMPLE.ORG:6514
 + To start we just need to restart the rsyslog service on both client and server machine:
 
 #sudo service rsyslog restart
@@ -143,8 +165,10 @@ If you face any problem, just ask the question in the comment section and wait t
 
 I hope that you enjoyed this article as always, if you have something to add don't hesitate to write a comment ^^ and follow :p
 
-Read more
-https://www.peerlyst.com/posts/send-log-file-over-rsyslog-tls-hamza-m-hirsi?trk=search_suggestion_query
+Read more:
+original Article : https://www.peerlyst.com/posts/send-log-file-over-rsyslog-tls-hamza-m-hirsi?trk=search_suggestion_query
+You can check rule set output/including module in this https://www.rsyslog.com/doc/v8-stable/configuration/modules/omruleset.html
+We can customize rsyslog template check this https://www.rsyslog.com/doc/master/configuration/templates.html
 
 References
 + https://www.digitalocean.com/community/tutorials/how-to-configure-ntp-for-use-in-the-ntp-pool-project-on-centos-7
