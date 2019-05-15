@@ -1,6 +1,10 @@
 # Send log file over Rsyslog/TLS
 # Rsyslog configuring with TLS (send log file)
 
+# Rsyslog_client.conf
+
+This file hold a basic configuration of rsyslog that send a file that contain different log, you need to change the IP and Port to the one you will need before implementation. 
+
 Today we will share a small tutorial where we will talk about all the steps that we need to configure Rsyslog and to create certificates:
 
 1. Rsyslog
