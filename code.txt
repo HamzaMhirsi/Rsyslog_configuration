@@ -1,0 +1,31 @@
+        filehandle = open('/home/kafka/traffix', 'r')
+        f=open('/home/kafka/tshark/traffic','a')
+        table={}
+        n=0
+        while True:
+                line = filehandle.readline()
+                if len(table)>500:
+                        del table[list(table.keys())[0]]
+                if line!="":
+                        isrc = line.split("|")
+        #               print isrc
+                        src=isrc[3]
+        #               print src
+                        ip_src = str(src.replace('.',''))
+                        dst = line.split("|")[4]
+                        ip_dst = str(dst.replace('.',''))
+                        port_src = str(line.split("|")[11])
+                        port_dst = str(line.split("|")[12])
+                        ssl_content_type = str(line.split("|")[24])
+                        print ssl_content_type
+                        if ip_src < ip_dst :
+                                fingerprint = ip_src + ip_dst + port_src + port_                                                                                                                                                             dst
+                        else :
+                                fingerprint = ip_dst + ip_src + port_dst + port_                                                                                                                                                  src
+                        print fingerprint
+#                       print table
+                        if fingerprint in table.keys():
+                                value = table.get(fingerprint)
+                                print value
+                        else :
+                                value = 0
